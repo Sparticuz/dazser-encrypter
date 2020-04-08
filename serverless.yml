@@ -1,0 +1,102 @@
+service: dazser-franreportmailer
+org: networkadmin
+app: dazser-mailer-app
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: dev
+  timeout: 300
+  region: us-east-1
+  iamRoleStatements:
+    # This permission is needed to allow us to use dynamodb
+    - Effect: Allow
+      Action:
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+      Resource: !GetAtt franreportmailerDynamoDbTable.Arn
+      # This permission is to allow us to upload the pdf to the s3 bucket
+    - Effect: Allow
+      Action:
+        - s3:*
+      Resource: "*"
+    - Effect: Allow
+      Action:
+        - sqs:*
+      Resource: "*"
+
+package:
+  exclude:
+    - typescript/**
+    - tests/**
+
+custom:
+  DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
+  SQS_QUEUE_NAME: ${self:service}-${opt:stage, self:provider.stage}
+  S3_BUCKET_NAME: ${self:service}-${opt:stage, self:provider.stage}
+
+functions:
+  franreportmailer:
+    handler: dist/handler.start
+    environment:
+      DYNAMODB_TABLE: !Ref franreportmailerDynamoDbTable
+      SQS_QUEUE_NAME: !GetAtt franreportmailerSQSQueue.QueueName
+      SQS_QUEUE_ARN: !GetAtt franreportmailerSQSQueue.Arn
+      SQS_QUEUE_URL: !Ref franreportmailerSQSQueue
+      S3_BUCKET: "dazser-files"
+      SQS_EMAIL_QUEUE: "https://sqs.us-east-1.amazonaws.com/863441837526/dazser-mailer-prod"
+      DB_HOST: ${ssm:/api/sql/host~true}
+      DB_USER: ${ssm:/api/sql/user~true}
+      DB_PASS: ${ssm:/api/sql/pass~true}
+    events:
+      - sqs:
+          arn: !GetAtt franreportmailerSQSQueue.Arn
+          batchSize: 1
+
+resources:
+  Resources:
+    franreportmailerDynamoDbTable:
+      Type: "AWS::DynamoDB::Table"
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: id
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TimeToLiveSpecification:
+          AttributeName: expires
+          Enabled: true
+        TableName: ${self:custom.DYNAMODB_TABLE}
+    franreportmailerSQSDLQQueue:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: dlq-${self:custom.SQS_QUEUE_NAME}
+        KmsMasterKeyId: alias/aws/sqs
+        KmsDataKeyReusePeriodSeconds: 12000
+    franreportmailerSQSQueue:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: ${self:custom.SQS_QUEUE_NAME}
+        KmsMasterKeyId: alias/aws/sqs
+        KmsDataKeyReusePeriodSeconds: 12000
+        VisibilityTimeout: 1800
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt franreportmailerSQSDLQQueue.Arn
+          maxReceiveCount: 5
+
+  Outputs:
+    franreportmailerDynamoDbTableName:
+      Value: !Ref franreportmailerDynamoDbTable
+    franreportmailerDynamoDbTableArn:
+      Value: !GetAtt franreportmailerDynamoDbTable.Arn
+    franreportmailerSQSDLQQueueArn:
+      Value: !GetAtt franreportmailerSQSDLQQueue.Arn
+    franreportmailerSQSQueueArn:
+      Value: !GetAtt franreportmailerSQSQueue.Arn
