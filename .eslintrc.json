@@ -1,26 +1,22 @@
 {
   "root": true,
-  "parser": "@typescript-eslint/parser",
-  "plugins": [
-    "@typescript-eslint",
-    "prettier"
-  ],
   "extends": [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/eslint-recommended",
-    "plugin:@typescript-eslint/recommended",
-    "prettier",
-    "plugin:prettier/recommended",
-    "prettier/@typescript-eslint"
+    "@sparticuz/eslint-config"
   ],
-  "env": {
-    "node": true,
-    "mocha": true
-  },
   "parserOptions": {
     "ecmaVersion": 2019,
     "project": "./tsconfig.json",
     "sourceType": "module"
   },
-  "rules": {}
+  "rules": {
+    "node/no-unpublished-require": ["error", {
+      "allowModules": ["aws-sdk"]
+    }],
+    "no-console": ["warn", {
+      "allow": ["warn", "error"]
+    }]
+  },
+  "settings": {
+    "import/core-modules": ["aws-sdk"]
+  }
 }

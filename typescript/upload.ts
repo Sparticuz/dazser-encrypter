@@ -13,7 +13,7 @@ export default async function (
   const date = new Date();
   const month = (date.getMonth() + 1).toString();
   const year = date.getFullYear().toString();
-  const key = uuid().replace(/-/g, "") + ".pdf";
+  const key = `${uuid().replace(/-/g, "")}.pdf`;
 
   const path = isAttachment
     ? join("attachments", key)

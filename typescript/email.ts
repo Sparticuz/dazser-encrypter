@@ -1,4 +1,4 @@
-//This actually posts a payload to SQS
+// This actually posts a payload to SQS
 import SQS from "aws-sdk/clients/sqs";
 import { RequestPayload } from "./handler";
 import upload from "./upload";

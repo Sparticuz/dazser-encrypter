@@ -1,7 +1,8 @@
+/* eslint-disable no-await-in-loop */
 import checkMessage from "./dynamo";
 import send from "./email";
 import encrypt from "./encrypt";
-import getFile from "./getFile";
+import getFile from "./get-file";
 
 export interface RequestPayload {
   report: {
@@ -40,37 +41,36 @@ export const start = async (
 ): Promise<{ num: number }> => {
   let records = 0;
 
-  //First, let's loop through the sqs events
+  // First, let's loop through the sqs events
   for (const record of event.Records) {
     // Check if we've already seen this record
     if (await checkMessage(record.messageId, record.receiptHandle)) {
       console.error("Duplicate", record);
-      continue;
-    }
+    } else {
+      // Get the body of the record
+      const json: RequestPayload[] = JSON.parse(record.body);
 
-    // Get the body of the record
-    const json: RequestPayload[] = JSON.parse(record.body);
+      // For each payload in the json body
+      for (const payload of json) {
+        // Get the Attachment from s3
+        const content = await getFile(payload.report.url);
 
-    // For each payload in the json body
-    for (const payload of json) {
-      // Get the Attachment from s3
-      const content = await getFile(payload.report.url);
+        // Once I have it, encrypt it
+        let encryptedPdf;
+        if (payload.report.encrypt && payload.report.password !== undefined) {
+          encryptedPdf = encrypt(content, payload.report.password);
+        } else {
+          encryptedPdf = content;
+        }
 
-      // Once I have it, encrypt it
-      let encryptedPdf;
-      if (payload.report.encrypt && payload.report.password !== undefined) {
-        encryptedPdf = encrypt(content, payload.report.password);
-      } else {
-        encryptedPdf = content;
-      }
+        // Send an email to the FO
+        const mail = send(await encryptedPdf, payload);
 
-      // Send an email to the FO
-      const mail = send(await encryptedPdf, payload);
-
-      if (await mail) {
-        records++;
-      } else {
-        throw "Failed";
+        if (await mail) {
+          records += 1;
+        } else {
+          throw new Error("Failed");
+        }
       }
     }
   }

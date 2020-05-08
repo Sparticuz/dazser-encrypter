@@ -32,22 +32,21 @@ export default async function (
     };
     sqs.deleteMessage(sqsDelete);
     return true;
-  } else {
-    // if it doesn't exist , enter it, then continue
-    const ddbPut: DynamoDB.PutItemInput = {
-      Item: {
-        expires: {
-          S: (Date.now() + 3.6e6).toString(),
-        },
-        id: {
-          S: messageId,
-        },
-      },
-      TableName: process.env.DYNAMODB_TABLE as string,
-    };
-
-    await ddb.putItem(ddbPut).promise();
-
-    return false;
   }
+  // if it doesn't exist , enter it, then continue
+  const ddbPut: DynamoDB.PutItemInput = {
+    Item: {
+      expires: {
+        S: (Date.now() + 3.6e6).toString(),
+      },
+      id: {
+        S: messageId,
+      },
+    },
+    TableName: process.env.DYNAMODB_TABLE as string,
+  };
+
+  await ddb.putItem(ddbPut).promise();
+
+  return false;
 }

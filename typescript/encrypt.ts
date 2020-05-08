@@ -11,14 +11,14 @@ export default async function (
   file: Buffer,
   password: string
 ): Promise<Buffer> {
-  if (password === "") password = "1234";
+  const userPassword = password || "1234";
 
   const options: QPdfOptions = {
     keyLength: 256,
-    password,
+    password: userPassword,
   };
 
-  //Take the file buffer and write it, until I get Buffer in node-qpdf2
+  // Take the file buffer and write it, until I get Buffer in node-qpdf2
   const filePath = "/tmp/input.pdf";
   await fs.writeFile(filePath, file);
 
