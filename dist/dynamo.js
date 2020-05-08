@@ -27,20 +27,18 @@ async function default_1(messageId, receiptHandle) {
         sqs.deleteMessage(sqsDelete);
         return true;
     }
-    else {
-        const ddbPut = {
-            Item: {
-                expires: {
-                    S: (Date.now() + 3.6e6).toString(),
-                },
-                id: {
-                    S: messageId,
-                },
+    const ddbPut = {
+        Item: {
+            expires: {
+                S: (Date.now() + 3.6e6).toString(),
             },
-            TableName: process.env.DYNAMODB_TABLE,
-        };
-        await ddb.putItem(ddbPut).promise();
-        return false;
-    }
+            id: {
+                S: messageId,
+            },
+        },
+        TableName: process.env.DYNAMODB_TABLE,
+    };
+    await ddb.putItem(ddbPut).promise();
+    return false;
 }
 exports.default = default_1;

@@ -9,11 +9,10 @@ else {
     process.env.PATH = `${process.env.PATH}:./bin`;
 }
 async function default_1(file, password) {
-    if (password === "")
-        password = "1234";
+    const userPassword = password || "1234";
     const options = {
         keyLength: 256,
-        password,
+        password: userPassword,
     };
     const filePath = "/tmp/input.pdf";
     await fs_1.promises.writeFile(filePath, file);

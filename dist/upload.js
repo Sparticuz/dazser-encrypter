@@ -12,7 +12,7 @@ async function default_1(region, content, isAttachment) {
     const date = new Date();
     const month = (date.getMonth() + 1).toString();
     const year = date.getFullYear().toString();
-    const key = uuid_1.v4().replace(/-/g, "") + ".pdf";
+    const key = `${uuid_1.v4().replace(/-/g, "")}.pdf`;
     const path = isAttachment
         ? path_1.join("attachments", key)
         : path_1.join(region.toString(), year, month, key);
