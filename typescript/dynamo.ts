@@ -4,10 +4,10 @@ import SQS from "aws-sdk/clients/sqs";
 // Configure AWS
 const ddb = new DynamoDB({ apiVersion: "2012-08-10" });
 
-export default async function (
+export default async (
   messageId: string,
   receiptHandle: string
-): Promise<boolean> {
+): Promise<boolean> => {
   // verify that we haven't seen this payload.
   const ddbExists: DynamoDB.GetItemInput = {
     AttributesToGet: ["id"],
@@ -49,4 +49,4 @@ export default async function (
   await ddb.putItem(ddbPut).promise();
 
   return false;
-}
+};

@@ -1,6 +1,6 @@
 // This actually posts a payload to SQS
 import SQS from "aws-sdk/clients/sqs";
-import { RequestPayload } from "./handler";
+import type { EmailPayload } from "./handler";
 import upload from "./upload";
 
 export enum MergeType {
@@ -9,64 +9,32 @@ export enum MergeType {
   TEXT = "text.hbs",
 }
 
-declare interface Address {
-  address: string;
-  name: string;
+// Exclude to and attachment
+interface SqsPayload extends Omit<EmailPayload, "to" | "attachment"> {
+  attachments: string[];
+  to: string;
 }
 
-export declare interface EmailPayload {
-  to: string | string[] | Address | Address[];
-  cc?: string | string[] | Address | Address[];
-  bcc?: string | string[] | Address | Address[];
-  subject: string;
-  from: Address;
-  body: string;
-  // This is an iCal string
-  calendar?: string;
-  // This is a path to S3 for the attachment
-  // This is any because it's Mail.Attachments AND string | string []
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  attachments?: any[];
-  return_receipt?: boolean;
-  preview?: string;
-  phone: string;
-  company: string;
-  address_street: string;
-  address_csz: string;
-  template: MergeType;
-}
+export default async (pdf: Buffer, payload: EmailPayload): Promise<boolean> => {
+  const filePath = await upload(payload.regionnum, pdf, true);
 
-export default async function (
-  pdf: Buffer,
-  payload: RequestPayload
-): Promise<boolean> {
-  const filePath = await upload(payload.region.num, pdf, true);
-
-  const email: EmailPayload = {
-    to: {
-      address: payload.email.to.address,
-      name: payload.email.to.name,
-    },
-    subject: payload.email.subject,
-    from: {
-      address: payload.email.from.address,
-      name: payload.email.from.name,
-    },
-    body: payload.email.body,
+  const email: SqsPayload = {
     attachments: [filePath],
-    phone: payload.email.phone,
-    company: payload.email.company,
-    // eslint-disable-next-line @typescript-eslint/camelcase
-    address_street: payload.email.address_street,
-    // eslint-disable-next-line @typescript-eslint/camelcase
-    address_csz: payload.email.address_csz,
+    body: payload.body,
+    from: {
+      address: payload.from.address,
+      name: payload.from.name,
+    },
+    regionnum: payload.regionnum,
+    subject: payload.subject,
     template: MergeType.NOTIFY,
+    to: payload.to.address,
   };
 
   const sqs = new SQS({ apiVersion: "2012-11-05" });
   const sqsPost: SQS.SendMessageRequest = {
-    QueueUrl: process.env.SQS_EMAIL_QUEUE as string,
     MessageBody: JSON.stringify(email),
+    QueueUrl: process.env.SQS_EMAIL_QUEUE as string,
   };
 
   try {
@@ -75,4 +43,4 @@ export default async function (
   } catch {
     return false;
   }
-}
+};

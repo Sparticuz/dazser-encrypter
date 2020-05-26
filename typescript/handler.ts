@@ -4,41 +4,37 @@ import send from "./email";
 import encrypt from "./encrypt";
 import getFile from "./get-file";
 
-export interface RequestPayload {
-  report: {
-    name: string;
-    url: string;
-    data?: string;
-    encrypt?: boolean;
-    password?: string;
-  };
-  email: {
-    subject: string;
-    to: {
-      name: string;
-      address: string;
-    };
-    body: string;
-    from: {
-      name: string;
-      address: string;
-    };
-    company: string;
-    phone: string;
-    address_street: string;
-    address_csz: string;
-  };
-  region: {
-    name: string;
-    num: number;
-  };
-  customer?: number;
-  franchise?: number;
+export enum MergeType {
+  FRANPROSPECT = "franchisesales.html",
+  INVOICE = "invoice.html",
+  MARKET = "market.html",
+  NOTIFY = "notify.html",
+  PERFORMANCE = "performance.html",
+  TEXT = "text.hbs",
+  TRANSACTIONAL = "transactional.html",
 }
 
-export const start = async (
-  event: AWSLambda.SQSEvent
-): Promise<{ num: number }> => {
+export interface EmailPayload {
+  attachment: {
+    // This is the incoming PDF attachment and Password
+    password: string;
+    url: string;
+  };
+  body: string;
+  from: {
+    address: string;
+    name: string;
+  };
+  regionnum: string;
+  subject: string;
+  template: MergeType;
+  to: {
+    address: string;
+    name: string;
+  };
+}
+
+export default async (event: AWSLambda.SQSEvent): Promise<{ num: number }> => {
   let records = 0;
 
   // First, let's loop through the sqs events
@@ -48,17 +44,22 @@ export const start = async (
       console.error("Duplicate", record);
     } else {
       // Get the body of the record
-      const json: RequestPayload[] = JSON.parse(record.body);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const json = JSON.parse(record.body);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const payloads: EmailPayload[] =
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        typeof json[Symbol.iterator] !== "function" ? [json] : json;
 
       // For each payload in the json body
-      for (const payload of json) {
+      for (const payload of payloads) {
         // Get the Attachment from s3
-        const content = await getFile(payload.report.url);
+        const content = await getFile(payload.attachment.url);
 
         // Once I have it, encrypt it
         let encryptedPdf;
-        if (payload.report.encrypt && payload.report.password !== undefined) {
-          encryptedPdf = encrypt(content, payload.report.password);
+        if (payload.attachment.password !== undefined) {
+          encryptedPdf = encrypt(content, payload.attachment.password);
         } else {
           encryptedPdf = content;
         }

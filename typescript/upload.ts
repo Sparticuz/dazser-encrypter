@@ -5,11 +5,11 @@ import { v4 as uuid } from "uuid";
 const bucket = process.env.S3_BUCKET as string;
 const s3 = new S3({});
 
-export default async function (
-  region: number,
+export default async (
+  region: string,
   content: Buffer,
   isAttachment?: boolean
-): Promise<string> {
+): Promise<string> => {
   const date = new Date();
   const month = (date.getMonth() + 1).toString();
   const year = date.getFullYear().toString();
@@ -17,7 +17,7 @@ export default async function (
 
   const path = isAttachment
     ? join("attachments", key)
-    : join(region.toString(), year, month, key);
+    : join(region, year, month, key);
 
   const upload = await s3
     .upload({
@@ -30,4 +30,4 @@ export default async function (
     .promise();
 
   return upload.Location;
-}
+};
