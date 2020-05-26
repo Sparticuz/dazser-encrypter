@@ -9,14 +9,7 @@
     "sourceType": "module"
   },
   "rules": {
-    "node/no-unpublished-require": ["error", {
-      "allowModules": ["aws-sdk"]
-    }],
-    "no-console": ["warn", {
-      "allow": ["warn", "error"]
-    }]
   },
   "settings": {
-    "import/core-modules": ["aws-sdk"]
   }
 }
