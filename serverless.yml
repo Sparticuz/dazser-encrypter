@@ -38,6 +38,8 @@ custom:
 functions:
   franreportmailer:
     handler: dist/handler.start
+    layers:
+      - arn:aws:lambda:us-east-1:863441837526:layer:qpdf:2
     environment:
       DYNAMODB_TABLE: !Ref franreportmailerDynamoDbTable
       SQS_QUEUE_NAME: !GetAtt franreportmailerSQSQueue.QueueName
