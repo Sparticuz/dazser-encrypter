@@ -1,6 +1,6 @@
 {
-  "name": "dazser-franreportmailer",
-  "version": "1.2.0",
+  "name": "dazser-encrypter",
+  "version": "3.0.0",
   "description": "Takes an EmailPayload and replaces the attachment with an encrypted PDF",
   "main": "dist/handler.js",
   "engines": {
