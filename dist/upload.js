@@ -8,14 +8,14 @@ const path_1 = require("path");
 const uuid_1 = require("uuid");
 const bucket = process.env.S3_BUCKET;
 const s3 = new s3_1.default({});
-async function default_1(region, content, isAttachment) {
+exports.default = async (region, content, isAttachment) => {
     const date = new Date();
     const month = (date.getMonth() + 1).toString();
     const year = date.getFullYear().toString();
     const key = `${uuid_1.v4().replace(/-/g, "")}.pdf`;
     const path = isAttachment
         ? path_1.join("attachments", key)
-        : path_1.join(region.toString(), year, month, key);
+        : path_1.join(region, year, month, key);
     const upload = await s3
         .upload({
         Body: content,
@@ -26,5 +26,4 @@ async function default_1(region, content, isAttachment) {
     })
         .promise();
     return upload.Location;
-}
-exports.default = default_1;
+};

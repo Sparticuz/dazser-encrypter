@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const dynamodb_1 = __importDefault(require("aws-sdk/clients/dynamodb"));
 const sqs_1 = __importDefault(require("aws-sdk/clients/sqs"));
 const ddb = new dynamodb_1.default({ apiVersion: "2012-08-10" });
-async function default_1(messageId, receiptHandle) {
+exports.default = async (messageId, receiptHandle) => {
     const ddbExists = {
         AttributesToGet: ["id"],
         ConsistentRead: true,
@@ -40,5 +40,4 @@ async function default_1(messageId, receiptHandle) {
     };
     await ddb.putItem(ddbPut).promise();
     return false;
-}
-exports.default = default_1;
+};
