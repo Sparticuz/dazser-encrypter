@@ -46,7 +46,7 @@ functions:
       SQS_QUEUE_ARN: !GetAtt encrypterSQSQueue.Arn
       SQS_QUEUE_URL: !Ref encrypterSQSQueue
       S3_BUCKET: "dazser-files"
-      SQS_EMAIL_QUEUE: "https://sqs.us-east-1.amazonaws.com/863441837526/dazser-mailer-prod"
+      SQS_EMAIL_QUEUE: ${ssm:/api/sqs/mailer}
       DB_HOST: ${ssm:/api/sql/host~true}
       DB_USER: ${ssm:/api/sql/user~true}
       DB_PASS: ${ssm:/api/sql/pass~true}
