@@ -1,6 +1,6 @@
 {
   "name": "dazser-encrypter",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Takes an EmailPayload and replaces the attachment with an encrypted PDF",
   "main": "dist/handler.js",
   "engines": {

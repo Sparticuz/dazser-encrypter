@@ -1,13 +1,9 @@
 // This actually posts a payload to SQS
 import SQS from "aws-sdk/clients/sqs";
 import type { EmailPayload } from "./handler";
+// eslint-disable-next-line import/no-cycle
+import { MergeType } from "./handler";
 import upload from "./upload";
-
-export enum MergeType {
-  MARKET = "market.html",
-  NOTIFY = "notify.html",
-  TEXT = "text.hbs",
-}
 
 // Exclude to and attachment
 interface SqsPayload extends Omit<EmailPayload, "to" | "attachment"> {
